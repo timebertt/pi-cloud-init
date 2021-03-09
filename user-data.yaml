@@ -1,0 +1,65 @@
+#cloud-config
+
+hostname: raspberry-2
+locale: en_US.UTF-8
+timezone: Europe/Berlin
+
+users:
+  - default # pi user
+  - name: tim
+    gecos: Tim Ebert
+    groups: sudo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    # set to false to allow password login for this user
+    lock_passwd: true
+    shell: /bin/bash
+    # # salt + hashed password, generate with `mkpasswd -m SHA-512`
+    # passwd: $6$...
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDzEE4Z7wZXrO6HZF5XjSeF0qIBLLbaJiI5w3TDnzh6k+Mcg17ahBYLyA+CFkZOpU668hh3AbY+ess2iVkPQ9JvurnKEVUO7Q2kyU8YaXbX+eSsaaw7Y9eNb140br9K8/4DwE2q4cXlSTkhsHu9XJJads6ByXhVo2RZIsY07BWGdAAwv4nThVTMehxjzstCMWnfSEa1oHgd59R09hAqHHqJ1Al8RfgKzFevRv+zFj2bftZRH6bjLlRIj2izkIPjdgrwME9/2tJ5CwBelxnVa9KPtd0ndu0E3GfBwEmw0De3bGD1rTST3l29klBTJL0HXZrFMBKPcoE/CiBk8ZINOdjxutmr6FegLdsrIEQqyjC9KNaG8wPKXGGqfmtXX4dpqxf7z5W730D3BeNlT51a/NHFw+uTBOe+CmwKKRmBvUS/CHEUIo5di4bs342ZaTUrRdoIKz1kde3TSIcC7Q0T3X0GIFGaHcxqWWIz9PxFm1YKQ/WvIQXdVtk/rui82wWyGCrBRfsMivwmVkS05C6E1lsyKAFK6w2jX1P49ZuzP/gfd6oF7u0K/17MEmF/Lqg2ea5KwtN3djUhnR9njxR1iy0UNDPYzoOwqbNi8ENO9CO8If6rgJdTCwH3u2no5fL2bJwyuVQF2kser4DDDgCBIzegB4BpY7gs9yNEJqcS4bUTqQ==
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJsGtuJYWgCwGHznLg8A2Iqm124z4vvoZmC0cIwr1D6V
+
+# # authorized ssh keys for default user (pi)
+# ssh_authorized_keys:
+#   - ssh-rsa AAAA...
+
+# set to true to allow ssh password authentication (disabled by default)
+ssh_pwauth: false
+
+# If you want to setup WiFi on boot instead of ethernet, you have to write SSID and password
+# to /etc/netplan/config.yaml and apply it by adding `netplan apply` to `runcmd`.
+# This is a bit of a hack, because the cloud-init network configuration doesn't support WiFi,
+# see https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html.
+
+# write_files:
+# - content: |
+#     network:
+#       version: 2
+#       wifis:
+#         wlan0:
+#           dhcp4: true
+#           access-points:
+#             "$WIFI_SSID":
+#               password: "$WIFI_PASSWD"
+#   path: /etc/netplan/config.yaml
+
+# # install iw for setting WiFi country
+# packages:
+# - iw
+
+runcmd:
+  # fix /etc/hosts entry for hostname, otherwise sudo will complain
+  - sed -i "s/raspberrypi/$(hostname)/" /etc/hosts
+
+  # # apply custom netplan config
+  # - 'rm /etc/netplan/??-cloud-init.yaml'
+  # - 'chmod go-r /etc/netplan/config.yaml'
+  # - 'netplan apply'
+
+  # # Set up the WiFi country (needed in order for WiFi to work)
+  # - 'iw reg set $WIFI_REGDOMAIN'
+  # - 'mv /etc/default/crda /etc/default/crda.bak'
+  # - 'echo REGDOMAIN=$WIFI_REGDOMAIN > /etc/default/crda'
+
+  # # Multi-arch support on aarch64
+  # - 'dpkg --add-architecture armhf'
