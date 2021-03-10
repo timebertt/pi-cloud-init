@@ -2,11 +2,11 @@
 
 This repo features a custom [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/) image including [cloud-init](https://cloud-init.io/) built with [pi-gen](https://github.com/RPi-Distro/pi-gen).
 
-## TL;DR: How to use the image
+## TL;DR: How to use the image :gear:
 
 1. Download the image from GitHub:
     ```bash
-    curl -sSL -o 2021-03-10-raspios-buster-armhf-lite-cloud-init.zip https://github.com/timebertt/gardener/releases/download/2021-03-10/2021-03-10-raspios-buster-armhf-lite-cloud-init.zip
+    curl -sSL -o 2021-03-10-raspios-buster-armhf-lite-cloud-init.zip https://github.com/timebertt/gardener/releases/download/2021-03-10/2021-03-10-raspios-buster-armhf-lite-cloud-init.zip && \
     unzip -o 2021-03-10-raspios-buster-armhf-lite-cloud-init.zip
     ```
 
@@ -14,7 +14,7 @@ This repo features a custom [Raspberry Pi OS Lite](https://www.raspberrypi.org/s
 3. Flash image to SD card using [balena etcher](https://www.balena.io/etcher/), [Raspberry Pi Imager](https://www.raspberrypi.org/software/) or similar.
 4. Insert SD card into Pi and power up! :rocket:
 
-## Rationale
+## Rationale :bulb:
 
 [Raspberry Pi OS](https://www.raspberrypi.org/software/operating-systems/) is fairly easy to setup. Though, if you want to setup a Raspberry Pi cluster like Alex Ellis and the community [have been doing for five years+](https://alexellisuk.medium.com/five-years-of-raspberry-pi-clusters-77e56e547875), you will have to repeat some manual configuration steps like copying SSH keys, networking setup and so on for each Pi.
 
@@ -24,11 +24,11 @@ cloud-init can be used for bootstrapping Raspberry Pis as well, making it easy t
 
 This repo features a custom image based on Raspberry Pi OS Lite built with [pi-gen](https://github.com/RPi-Distro/pi-gen) with cloud-init preinstalled, which allows to pass initialization and configuration data (in form of `meta-data`, `user-data` and `network-config` files) to Pis via the boot image flashed to an SD card. This makes it easy to bootstrap multiple Pis in a plug-and-play fashion without attaching a monitor or manually SSHing into each one of them.
 
-**Why not simply use Ubuntu Server?**
+**Why not simply use Ubuntu Server?** :question:
 
 [Ubuntu Server](https://ubuntu.com/download/raspberry-pi) comes with cloud-init preinstalled and also features a Raspberry Pi Image. It can be leveraged in a [similar fashion](https://gitlab.com/Bjorn_Samuelsson/raspberry-pi-cloud-init-wifi) to the image built by this project to bootstrap Pis. Though, in my tests Ubuntu Server already consumed more than `300MB` of precious memory on my Pis without anything installed. Therefore I started building a custom image based on Raspberry Pi OS Lite, which consumes only roughly `60MB` of memory out of the box.
 
-## How to build the image
+## How to build the image :construction:
 
 You can build the image yourself and customize the build along the way by following these steps.
 
@@ -48,8 +48,8 @@ You can build the image yourself and customize the build along the way by follow
     vagrant plugin install vagrant-scp
     ```
     ```bash
-    zip_file=$(date +%Y-%m-%d)-raspios-buster-armhf-lite-cloud-init.zip
-    vagrant scp raspios-builder:/home/vagrant/pi-cloud-init/$zip_file $zip_file
+    zip_file=$(date +%Y-%m-%d)-raspios-buster-armhf-lite-cloud-init.zip && \
+    vagrant scp raspios-builder:/home/vagrant/pi-cloud-init/$zip_file $zip_file && \
     unzip -o "$zip_file"
     ```
 
@@ -58,13 +58,13 @@ You can build the image yourself and customize the build along the way by follow
 5. Mount boot partition to inject `user-data`, `meta-data` and `network-config`.
     (It's assuming a macOS machine, but you should be able to accomplish the same using `mount` and `umount` on Linux.)
     ```
-    img_file="${zip_file%.zip}.img"
-    volume="$(hdiutil mount "$img_file" | egrep -o '/Volumes/.+')"
-    cp meta-data.yaml "$volume"/meta-data
-    cp user-data.yaml "$volume"/user-data
-    cp network-config.yaml "$volume"/network-config
-    device="$(mount | grep "$volume" | cut -f1 -d' ' | egrep -o '/dev/disk.')"
-    diskutil umountDisk "$device"
+    img_file="${zip_file%.zip}.img" && \
+    volume="$(hdiutil mount "$img_file" | egrep -o '/Volumes/.+')" && \
+    cp meta-data.yaml "$volume"/meta-data && \
+    cp user-data.yaml "$volume"/user-data && \
+    cp network-config.yaml "$volume"/network-config && \
+    device="$(mount | grep "$volume" | cut -f1 -d' ' | egrep -o '/dev/disk.')" && \
+    diskutil umountDisk "$device" && \
     diskutil eject "$device"
     ```
 
@@ -87,5 +87,5 @@ You can build the image yourself and customize the build along the way by follow
 8. Finally, SSH into your Pi and verify cloud-init functionality. By default, the `pi` user is locked and SSH password authentication is disabled, so make sure to use the custom user with `ssh_authorized_keys` from your `user-data`.
     ```
     ssh your-user@your-pi
-    cat /var/log/cloud-init-output.log
+    less /var/log/cloud-init-output.log
     ```
