@@ -1,7 +1,18 @@
 #!/bin/bash -ex
 
-# go to home
-cd
+# go to home and fetch pi-gen
+cd /home/vagrant
+
+if [ -d pi-gen ] ; then
+  echo "found pi-gen, skipping clone"
+else
+  echo "cloning pi-gen"
+
+  git clone https://github.com/RPi-Distro/pi-gen.git
+  pushd pi-gen
+  chmod +x build.sh
+  popd
+fi
 
 pushd pi-gen
 
@@ -39,7 +50,7 @@ EOF
 ### add cloud-init step to stage2
 step="10-cloud-init"
 if [ -d "$step" ]; then
-    rm -Rf $step
+  rm -Rf $step
 fi
 mkdir $step && pushd $step
 
@@ -163,3 +174,35 @@ EOF
 chmod +x 01-run-chroot.sh
 
 popd
+
+### add cgroups step to stage2
+step="11-cgroups"
+if [ -d "$step" ]; then
+  rm -Rf $step
+fi
+mkdir $step && pushd $step
+
+cat > 00-run-chroot.sh <<"EOF"
+#!/bin/bash
+
+# Raspberry Pi OS doesn't enable cgroups by default
+cmdline_string="cgroup_memory=1 cgroup_enable=memory"
+
+if ! grep -q "$cmdline_string" /boot/cmdline.txt ; then
+  sed -i "1 s/\$/ $cmdline_string/" /boot/cmdline.txt
+fi
+EOF
+chmod +x 00-run-chroot.sh
+
+popd
+
+# end modifying stage2
+popd
+
+### start pi-gen build
+sudo ./build.sh
+
+### copy image back to project dir
+zip_file=$(find deploy -name 'image_*.zip' -printf '%T@ %p\n' | sort -n | cut -d' ' -f 2- | tail -n 1)
+copied_zip_file="${zip_file##*/image_}"
+cp "$zip_file" "/home/vagrant/pi-cloud-init/$copied_zip_file"

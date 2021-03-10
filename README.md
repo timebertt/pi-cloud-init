@@ -32,43 +32,33 @@ This repo features a custom image based on Raspberry Pi OS Lite built with [pi-g
 
 You can build the image yourself and customize the build along the way by following these steps.
 
-1. Setup a Ubuntu VM using [multipass](https://multipass.run/) which will build the image. This provides a clean build environment and additionally works on Linux as well as macOS.
+1. Setup a Debian VM using [vagrant](https://www.vagrantup.com/) which will build the image. This provides a clean build environment and additionally works on a Linux as well as macOS.
     ```bash
-    multipass launch --name raspios-builder --cpus 8 --mem 16G --disk 25G
-    multipass transfer install.sh raspios-builder:/home/ubuntu/install.sh
-    multipass transfer prepare-build.sh raspios-builder:/home/ubuntu/prepare-build.sh
+    vagrant up
     ```
 
-1. Shell into the build VM and prepare the pi-gen build:
+2. Start pi-gen build in the VM. This is going to take some time...
+    ```
+    vagrant ssh -c /home/vagrant/pi-cloud-init/build.sh
+    ```
+
+3. Transfer produced image to the host machine and unzip.
+    This requires the `vagrant-scp` plugin, install it first by running:
     ```bash
-    multipass shell raspios-builder
+    vagrant plugin install vagrant-scp
     ```
     ```bash
-    chmod +x prepare-build.sh install.sh
-    ./install.sh # clone pi-gen and install dependencies
-    ./prepare-build.sh # add cloud-init build steps
+    zip_file=$(date +%Y-%m-%d)-raspios-buster-armhf-lite-cloud-init.zip
+    vagrant scp raspios-builder:/home/vagrant/pi-cloud-init/$zip_file $zip_file
+    unzip -o "$zip_file"
     ```
 
-1. Start pi-gen build in the VM. This is going to take some time...
-    ```
-    cd ~/pi-gen
-    sudo ./build.sh
-    ```
+4. Customize `user-data.yaml`, `meta-data.yaml` and `network-config.yaml` for the instance you're setting up.
 
-1. Transfer produced image to the host machine and unzip:
-    ```
-    vm_zip_file=$(multipass exec raspios-builder -- find /home/ubuntu/pi-gen/deploy -name 'image_*.zip' -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)
-    host_zip_file="${vm_zip_file##*/image_}"
-    multipass transfer raspios-builder:"$vm_zip_file" "$host_zip_file"
-    unzip -o "$host_zip_file"
-    ```
-
-1. Customize `user-data.yaml`, `meta-data.yaml` and `network-config.yaml` for the instance you're setting up.
-
-1. Mount boot partition to inject `user-data`, `meta-data` and `network-config`.
+5. Mount boot partition to inject `user-data`, `meta-data` and `network-config`.
     (It's assuming a macOS machine, but you should be able to accomplish the same using `mount` and `umount` on Linux.)
     ```
-    img_file="${host_zip_file%.zip}.img"
+    img_file="${zip_file%.zip}.img"
     volume="$(hdiutil mount "$img_file" | egrep -o '/Volumes/.+')"
     cp meta-data.yaml "$volume"/meta-data
     cp user-data.yaml "$volume"/user-data
@@ -78,7 +68,7 @@ You can build the image yourself and customize the build along the way by follow
     diskutil eject "$device"
     ```
 
-1. Optionally, you can verify the image and cloud-init functionality using [dockerpi](https://github.com/lukechilds/dockerpi). It start a Docker container with QEMU in it emulating a Pi. This way you can already verify, that the image and the provided `user-data` is working without flashing a new SD card everytime.
+6. Optionally, you can verify the image and cloud-init functionality using [dockerpi](https://github.com/lukechilds/dockerpi). It start a Docker container with QEMU in it emulating a Pi. This way you can already verify, that the image and the provided `user-data` is working without flashing a new SD card everytime.
     ```
     docker run -it -v $PWD/$img_file:/sdcard/filesystem.img lukechilds/dockerpi:vm
     ...
@@ -92,9 +82,9 @@ You can build the image yourself and customize the build along the way by follow
     cloud-init[620]: Cloud-init v. 20.2 finished at Mon, 08 Mar 2021 19:56:08 +0000. Datasource DataSourceNoCloud [seed=/dev/sda1][dsmode=net].  Up 179.17 seconds
     ```
 
-1. Now, flash the image including cloud-init data to SD card, using [balena etcher](https://www.balena.io/etcher/), [Raspberry Pi Imager](https://www.raspberrypi.org/software/) or similar.
+7. Now, flash the image including cloud-init data to SD card, using [balena etcher](https://www.balena.io/etcher/), [Raspberry Pi Imager](https://www.raspberrypi.org/software/) or similar.
 
-2. Finally, SSH into your Pi and verify cloud-init functionality. By default, the `pi` user is locked and SSH password authentication is disabled, so make sure to use the custom user with `ssh_authorized_keys` from your `user-data`.
+8. Finally, SSH into your Pi and verify cloud-init functionality. By default, the `pi` user is locked and SSH password authentication is disabled, so make sure to use the custom user with `ssh_authorized_keys` from your `user-data`.
     ```
     ssh your-user@your-pi
     cat /var/log/cloud-init-output.log
