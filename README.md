@@ -34,12 +34,18 @@ You can build the image yourself and customize the build along the way by follow
 
 1. Setup a Debian VM using [vagrant](https://www.vagrantup.com/) which will build the image. This provides a clean build environment and additionally works on a Linux as well as macOS.
     ```bash
+    # choose what type of image to build: either amrhf (default) or aarch64 (experimental)
+    export ARCH=armhf
     vagrant up
     ```
 
 2. Start pi-gen build in the VM. This is going to take some time...
-    ```
+    ```bash
     vagrant ssh -c /home/vagrant/pi-cloud-init/build.sh
+    ```
+    When you want to rebuild from scratch (e.g. because you want to build for another arch), you can run
+    ```bash
+    vagrant ssh -c "CLEAN=1 /home/vagrant/pi-cloud-init/build.sh"
     ```
 
 3. Transfer produced image to the host machine and unzip.
@@ -48,7 +54,7 @@ You can build the image yourself and customize the build along the way by follow
     vagrant plugin install vagrant-scp
     ```
     ```bash
-    zip_file=$(date +%Y-%m-%d)-raspios-buster-armhf-lite-cloud-init.zip && \
+    zip_file=$(date +%Y-%m-%d)-raspios-buster-$ARCH-lite-cloud-init.zip && \
     vagrant scp raspios-builder:/home/vagrant/pi-cloud-init/$zip_file $zip_file && \
     unzip -o "$zip_file"
     ```
@@ -57,7 +63,7 @@ You can build the image yourself and customize the build along the way by follow
 
 5. Mount boot partition to inject `user-data`, `meta-data` and `network-config`.
     (It's assuming a macOS machine, but you should be able to accomplish the same using `mount` and `umount` on Linux.)
-    ```
+    ```bash
     img_file="${zip_file%.zip}.img" && \
     volume="$(hdiutil mount "$img_file" | egrep -o '/Volumes/.+')" && \
     cp meta-data.yaml "$volume"/meta-data && \
@@ -68,8 +74,8 @@ You can build the image yourself and customize the build along the way by follow
     diskutil eject "$device"
     ```
 
-6. Optionally, you can verify the image and cloud-init functionality using [dockerpi](https://github.com/lukechilds/dockerpi). It start a Docker container with QEMU in it emulating a Pi. This way you can already verify, that the image and the provided `user-data` is working without flashing a new SD card everytime.
-    ```
+6. Optionally, you can verify the image and cloud-init functionality using [dockerpi](https://github.com/lukechilds/dockerpi) (only works with `armhf` images). It start a Docker container with QEMU in it emulating a Pi. This way you can already verify, that the image and the provided `user-data` is working without flashing a new SD card everytime.
+    ```bash
     docker run -it -v $PWD/$img_file:/sdcard/filesystem.img lukechilds/dockerpi:vm
     ...
     cloud-init[96]: Cloud-init v. 20.2 running 'init-local' at Mon, 08 Mar 2021 19:54:02 +0000. Up 53.20 seconds.
@@ -84,8 +90,8 @@ You can build the image yourself and customize the build along the way by follow
 
 7. Now, flash the image including cloud-init data to SD card, using [balena etcher](https://www.balena.io/etcher/), [Raspberry Pi Imager](https://www.raspberrypi.org/software/) or similar.
 
-8. Finally, SSH into your Pi and verify cloud-init functionality. By default, the `pi` user is locked and SSH password authentication is disabled, so make sure to use the custom user with `ssh_authorized_keys` from your `user-data`.
-    ```
+8. Finally, SSH into your Pi and verify cloud-init functionality. By default, the `pi` user is locked and SSH password authentication is disabled, so make sure to add a custom user with `ssh_authorized_keys` to your `user-data`.
+    ```bash
     ssh your-user@your-pi
     less /var/log/cloud-init-output.log
     ```

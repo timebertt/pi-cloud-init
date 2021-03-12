@@ -1,5 +1,11 @@
 VM_NAME = "raspios-builder"
 
+$set_environment_variables = <<SCRIPT
+cat > /etc/profile.d/envvars.sh <<EOF
+export ARCH=#{ENV['ARCH']}
+EOF
+SCRIPT
+
 Vagrant.configure("2") do |config|
   config.vm.box = "debian/buster64"
   
@@ -12,6 +18,7 @@ Vagrant.configure("2") do |config|
     v.name = VM_NAME
   end
 
+  config.vm.provision "shell", inline: $set_environment_variables
   config.vm.provision "shell", path: "bootstrap.sh"
 
   config.vm.synced_folder ".", "/vagrant", disabled: true

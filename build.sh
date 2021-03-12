@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+ARCH="${ARCH:-armhf}"
+
 # go to home and fetch pi-gen
 cd /home/vagrant
 
@@ -9,16 +11,29 @@ else
   echo "cloning pi-gen"
 
   git clone https://github.com/RPi-Distro/pi-gen.git
-  pushd pi-gen
-  chmod +x build.sh
-  popd
 fi
 
 pushd pi-gen
 
+chmod +x build.sh
+
+case "$ARCH" in
+  armhf)
+    git checkout master
+    ;;
+  aarch64)
+    echo "WARNING: 64-bit build is experimental"
+    git checkout arm64
+    ;;
+  *)
+    >&2 echo "unsupported architecture '$ARCH'"
+    exit 1
+    ;;
+esac
+
 ### write out config
 cat > config <<EOL
-export IMG_NAME="raspios-buster-armhf"
+export IMG_NAME="raspios-buster-$ARCH"
 export RELEASE=buster
 export DEPLOY_ZIP=1
 export LOCALE_DEFAULT=en_US.UTF-8
@@ -164,10 +179,10 @@ system_info:
     templates_dir: /etc/cloud/templates/
     upstart_dir: /etc/init/
   package_mirrors:
-    - arches: [default]
-      failsafe:
-        primary: http://raspbian.raspberrypi.org/raspbian
-        security: http://security.debian.org/
+  - arches: [default]
+    failsafe:
+      primary: http://deb.debian.org/debian
+      security: http://security.debian.org/
   ssh_svcname: ssh
 EOC
 EOF
