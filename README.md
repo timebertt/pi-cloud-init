@@ -28,6 +28,11 @@ This repo features a custom image based on Raspberry Pi OS Lite built with [pi-g
 
 [Ubuntu Server](https://ubuntu.com/download/raspberry-pi) comes with cloud-init preinstalled and also features a Raspberry Pi Image. It can be leveraged in a [similar fashion](https://gitlab.com/Bjorn_Samuelsson/raspberry-pi-cloud-init-wifi) to the image built by this project to bootstrap Pis. Though, in my tests Ubuntu Server already consumed more than `300MB` of precious memory on my Pis without anything installed. Therefore I started building a custom image based on Raspberry Pi OS Lite, which consumes only roughly `60MB` of memory out of the box.
 
+**Why not use k3os?** :question:
+
+[k3os](https://github.com/rancher/k3os) is a minimal OS designed to run [k3s](https://github.com/k3s-io/k3s) and be managed by `kubectl`. It also features a `cloud-init`-like configuration file, which can be used to easily configure hosts. Unfortunately, there are currently [no official RPi images](https://github.com/rancher/k3os/issues/309), but you can build one on your own by leveraging [this project](https://github.com/rancher/k3os/issues/309).
+In my tests, `k3os` performed quite well with some additional overhead in CPU and Memory usage. I chose to build my own images based on Raspberry Pi OS, because of the lower resource usage, the familiarity with Debian-based distros, flexibility in bootstrapping my clusters (not tied to k3s) and the endless resources on Raspberry Pi OS.
+
 ## How to build the image :construction:
 
 You can build the image yourself and customize the build along the way by following these steps.
