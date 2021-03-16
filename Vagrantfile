@@ -3,6 +3,9 @@ VM_NAME = "raspios-builder"
 $set_environment_variables = <<SCRIPT
 cat > /etc/profile.d/envvars.sh <<EOF
 export ARCH=#{ENV['ARCH']}
+export LANGUAGE=en_US.UTF-8 
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 EOF
 SCRIPT
 
@@ -18,6 +21,11 @@ Vagrant.configure("2") do |config|
     v.name = VM_NAME
   end
 
+  config.vm.provision "shell", privileged: true, inline: <<-SCRIPT
+  #!/bin/bash
+  echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+  locale-gen en_US.UTF-8
+  SCRIPT
   config.vm.provision "shell", inline: $set_environment_variables
   config.vm.provision "shell", path: "bootstrap.sh"
 
