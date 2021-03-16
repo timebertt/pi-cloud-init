@@ -39,18 +39,20 @@ You can build the image yourself and customize the build along the way by follow
 
 1. Setup a Debian VM using [vagrant](https://www.vagrantup.com/) which will build the image. This provides a clean build environment and additionally works on a Linux as well as macOS.
     ```bash
-    # choose what type of image to build: either amrhf (default) or aarch64 (experimental)
+    # what image to build: either amrhf (default) or aarch64 (experimental)
     export ARCH=armhf
-    vagrant up
+    vagrant up --provision
     ```
 
 2. Start pi-gen build in the VM. This is going to take some time...
     ```bash
-    vagrant ssh -c /home/vagrant/pi-cloud-init/build.sh
+    vagrant ssh
+    ./pi-cloud-init/build.sh
     ```
     When you want to rebuild from scratch (e.g. because you want to build for another arch), you can run
     ```bash
-    vagrant ssh -c "CLEAN=1 /home/vagrant/pi-cloud-init/build.sh"
+    vagrant ssh
+    CLEAN=1 ./pi-cloud-init/build.sh
     ```
 
 3. Transfer produced image to the host machine and unzip.
