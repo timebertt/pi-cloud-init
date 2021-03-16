@@ -5,9 +5,7 @@ ethernets:
     dhcp6: false
     addresses:
       - 192.168.0.20/24
-      # - 2001:1::1/64
     gateway4: 192.168.0.1
-    # gateway6: 2001:1::2
     nameservers:
       search: [home]
       addresses: [8.8.8.8, 8.8.4.4]

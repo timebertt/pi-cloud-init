@@ -102,3 +102,9 @@ You can build the image yourself and customize the build along the way by follow
     ssh your-user@your-pi
     less /var/log/cloud-init-output.log
     ```
+
+## Next steps :running:
+
+### Play around with user-data :video_game:
+
+You can find more user-data examples under [examples](./examples).
