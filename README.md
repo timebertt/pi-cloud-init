@@ -108,4 +108,43 @@ You can build the image yourself and customize the build along the way by follow
 
 ### Play around with user-data :video_game:
 
-You can find more user-data examples under [examples](./examples).
+Find some more user-data examples under [examples](./examples):
+
+- [Simple user-data](./examples/simple)
+- [Static IPv4](./examples/static-ip)
+
+## More fun :tada:
+
+### Spin up a Kubernetes cluster :nerd_face:
+
+[examples/k3s-cluster](./examples/k3s-cluster) contains some user-data files for spinning up a Kubernetes cluster using [k3s](https://github.com/k3s-io/k3s). Use the set of user-data files in `raspberry-0` for bootstrapping your cluster (i.e. for the first Pi). After that, join any number of servers and agents using the user-data files in `raspberry-1`.
+
+The examples already include configuration for:
+
+- [kube-vip](https://kube-vip.io/) in layer 2 mode (ARP) for API server load balancing
+  - provides an HA control plane endpoint to perform rolling updates on k3s servers (drain, install, reboot one by one)
+  - only used for control plane load balancing
+- [MetalLB](https://metallb.universe.tf/) in layer 2 mode (ARP) for LoadBalancer Services
+  - also includes LoadBalancer IP allocation address ranges specified in configuration ConfigMap (built-in and easier to configure than kube-vip)
+  - not used for control plane load balancing (not supported, ref [metallb/metallb#168](https://github.com/metallb/metallb/issues/168))
+  - [klipper-lb](https://github.com/k3s-io/klipper-lb) is disabled, as it can't provide a dedicated LoadBalancer IP on your local network (just uses host ports to make LoadBalancer services accessible)
+
+Get the kubeconfig from `raspberry-0` and modify it to use the API server LoadBalancer IP:
+
+```bash
+mkdir -p $HOME/.kube/configs/home && \
+ssh tim@192.168.0.20 sudo cat /etc/rancher/k3s/k3s.yaml > $HOME/.kube/configs/home/pi-cluster.yaml && \
+export KUBECONFIG=$HOME/.kube/configs/home/pi-cluster.yaml && \
+kubectl config rename-context default pi-cluster && \
+kubectl config set clusters.default.server https://192.168.0.30:6443
+```
+
+Check if all Nodes were bootstrapped and got ready:
+
+```bash
+$ kubectl get no -owide
+NAME          STATUS   ROLES                       AGE     VERSION        INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                       KERNEL-VERSION   CONTAINER-RUNTIME
+raspberry-0   Ready    control-plane,etcd,master   18m     v1.20.5+k3s1   192.168.0.20   <none>        Debian GNU/Linux 10 (buster)   5.10.17-v8+      containerd://1.4.4-k3s1
+raspberry-1   Ready    control-plane,etcd,master   11m     v1.20.5+k3s1   192.168.0.21   <none>        Debian GNU/Linux 10 (buster)   5.10.17-v8+      containerd://1.4.4-k3s1
+raspberry-2   Ready    control-plane,etcd,master   9m13s   v1.20.5+k3s1   192.168.0.22   <none>        Debian GNU/Linux 10 (buster)   5.10.17-v8+      containerd://1.4.4-k3s1
+```
