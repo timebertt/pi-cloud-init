@@ -76,6 +76,9 @@ EOF
 cat > 01-run-chroot.sh <<EOF
 #!/bin/bash
 
+# Disable dhcpcd - it has a conflict with cloud-init network config
+systemctl mask dhcpcd
+
 cat > /etc/cloud/cloud.cfg <<EOC
 # The top level settings are used as module
 # and system configuration.
