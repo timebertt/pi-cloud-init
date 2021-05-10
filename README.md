@@ -7,8 +7,8 @@ This repo features a custom [Raspberry Pi OS Lite](https://www.raspberrypi.org/s
 1. Download the image from GitHub:
     ```bash
     ARCH=armhf # either armhf or aarch64 (experimental)
-    curl -sSL -o 2021-03-16-raspios-buster-$ARCH-lite-cloud-init.zip https://github.com/timebertt/pi-cloud-init/releases/download/2021-03-16/2021-03-16-raspios-buster-$ARCH-lite-cloud-init.zip && \
-    unzip -o 2021-03-16-raspios-buster-$ARCH-lite-cloud-init.zip
+    curl -sSL -o 2021-05-10-raspios-buster-$ARCH-lite-cloud-init.zip https://github.com/timebertt/pi-cloud-init/releases/download/2021-05-10/2021-05-10-raspios-buster-$ARCH-lite-cloud-init.zip && \
+    unzip -o 2021-05-10-raspios-buster-$ARCH-lite-cloud-init.zip
     ```
 
 2. Mount the `boot` partition (of the `.img` file) to add `user-data`, `meta-data` and optionally `network-config` files to the root of it. Unmount it again, once added.
