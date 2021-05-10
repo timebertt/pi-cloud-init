@@ -1,6 +1,8 @@
 #cloud-config
 
 hostname: raspberry-0
+# update /etc/hosts according to hostname (otherwise sudo will complain)
+manage_etc_hosts: true
 locale: en_US.UTF-8
 timezone: Europe/Berlin
 
@@ -40,7 +42,3 @@ ssh_pwauth: false
 #     #!/bin/bash
 #     echo "Hello cloud-init on Raspberry Pi!"
 #     date > /tmp/per-once-was-here
-
-runcmd:
-# fix /etc/hosts entry for hostname, otherwise sudo will complain
-- sed -i "s/raspberrypi/$(hostname)/" /etc/hosts

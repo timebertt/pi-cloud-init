@@ -1,6 +1,8 @@
 #cloud-config
 
 hostname: raspberry-1
+# update /etc/hosts according to hostname (otherwise sudo will complain)
+manage_etc_hosts: true
 locale: en_US.UTF-8
 timezone: Europe/Berlin
 
@@ -22,8 +24,6 @@ users:
 ssh_pwauth: false
 
 bootcmd:
-# disable dhcpcd so it doesn't interfere with our static IP config
-- systemctl disable dhcpcd && systemctl stop dhcpcd
 # disable ipv6 on all interfaces
 - sysctl net.ipv6.conf.all.disable_ipv6=1
 
@@ -163,7 +163,3 @@ write_files:
           image:
             repository: metallb/speaker
             tag: v0.9.5
-
-runcmd:
-# fix /etc/hosts entry for hostname, otherwise sudo will complain
-- sed -i "s/raspberrypi/$(hostname)/" /etc/hosts
