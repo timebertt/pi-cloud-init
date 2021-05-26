@@ -184,12 +184,15 @@ system_info:
   package_mirrors:
   - arches: [default]
     failsafe:
-      primary: http://deb.debian.org/debian
-      security: http://security.debian.org/
+      primary: http://raspbian.raspberrypi.org/raspbian/
+      security: []
   ssh_svcname: ssh
 EOC
 EOF
 chmod +x 01-run-chroot.sh
+
+# fix sources list
+echo 'deb {{mirror}} {{codename}} main contrib non-free rpi' > /etc/cloud/templates/sources.list.debian.tmpl
 
 popd
 
