@@ -87,7 +87,7 @@ cat > /etc/cloud/cloud.cfg <<EOC
 # when a 'default' entry is found it will reference the 'default_user'
 # from the distro configuration specified below
 users:
-  - default
+- default
 
 # If this is set, 'root' will not be able to ssh in and they
 # will get a message to login instead as the above $user (debian)
@@ -112,58 +112,58 @@ datasource:
 
 # The modules that run in the 'init' stage
 cloud_init_modules:
- - migrator
- - seed_random
- - bootcmd
- - write-files
- - growpart
- - resizefs
- - disk_setup
- - mounts
- - set_hostname
- - update_hostname
- - update_etc_hosts
- - ca-certs
- - rsyslog
- - users-groups
- - ssh
+- migrator
+- seed_random
+- bootcmd
+- write-files
+- growpart
+- resizefs
+- disk_setup
+- mounts
+- set_hostname
+- update_hostname
+- update_etc_hosts
+- ca-certs
+- rsyslog
+- users-groups
+- ssh
 
 # The modules that run in the 'config' stage
 cloud_config_modules:
 # Emit the cloud config ready event
 # this can be used by upstart jobs for 'start on cloud-config'.
- - emit_upstart
- - ssh-import-id
- - locale
- - set-passwords
- - grub-dpkg
- - apt-pipelining
- - apt-configure
- - ntp
- - timezone
- - disable-ec2-metadata
- - runcmd
- - byobu
+- emit_upstart
+- ssh-import-id
+- locale
+- set-passwords
+- grub-dpkg
+- apt-pipelining
+- apt-configure
+- ntp
+- timezone
+- disable-ec2-metadata
+- runcmd
+- byobu
 
 # The modules that run in the 'final' stage
 cloud_final_modules:
- - package-update-upgrade-install
- - fan
- - puppet
- - chef
- - salt-minion
- - mcollective
- - rightscale_userdata
- - scripts-vendor
- - scripts-per-once
- - scripts-per-boot
- - scripts-per-instance
- - scripts-user
- - ssh-authkey-fingerprints
- - keys-to-console
- - phone-home
- - final-message
- - power-state-change
+- package-update-upgrade-install
+- fan
+- puppet
+- chef
+- salt-minion
+- mcollective
+- rightscale_userdata
+- scripts-vendor
+- scripts-per-once
+- scripts-per-boot
+- scripts-per-instance
+- scripts-user
+- ssh-authkey-fingerprints
+- keys-to-console
+- phone-home
+- final-message
+- power-state-change
 
 # System and/or distro specific settings
 # (not accessible to handlers/transforms)
@@ -208,6 +208,27 @@ cmdline_string="cgroup_memory=1 cgroup_enable=memory"
 
 if ! grep -q "$cmdline_string" /boot/cmdline.txt ; then
   sed -i "1 s/\$/ $cmdline_string/" /boot/cmdline.txt
+fi
+EOF
+chmod +x 00-run-chroot.sh
+
+popd
+
+### add rfkill step to stage2
+step="12-rfkill"
+if [ -d "$step" ]; then
+  rm -Rf $step
+fi
+mkdir $step && pushd $step
+
+# must run after stage2/02-net-tweaks (which installs the wifi-check.sh script)
+cat > 00-run-chroot.sh <<"EOF"
+#!/bin/bash
+
+# disable warning message on login about WiFi being blocked by rfkill
+# WiFi is disabled by default, see https://github.com/RPi-Distro/pi-gen/blob/66cd2d17a0d2d04985b83a2ba830915c9a7d81dc/export-noobs/00-release/files/release_notes.txt#L223-L229
+if [ -e /etc/profile.d/wifi-check.sh ] ; then
+  mv /etc/profile.d/wifi-check.sh /etc/profile.d/wifi-check.sh.bak
 fi
 EOF
 chmod +x 00-run-chroot.sh
