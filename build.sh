@@ -79,6 +79,9 @@ cat > 01-run-chroot.sh <<EOF
 # Disable dhcpcd - it has a conflict with cloud-init network config
 systemctl mask dhcpcd
 
+# fix sources list
+echo 'deb {{mirror}} {{codename}} main contrib non-free rpi' > /etc/cloud/templates/sources.list.debian.tmpl
+
 cat > /etc/cloud/cloud.cfg <<EOC
 # The top level settings are used as module
 # and system configuration.
@@ -184,8 +187,8 @@ system_info:
   package_mirrors:
   - arches: [default]
     failsafe:
-      primary: http://deb.debian.org/debian
-      security: http://security.debian.org/
+      primary: http://raspbian.raspberrypi.org/raspbian/
+      security: []
   ssh_svcname: ssh
 EOC
 EOF
